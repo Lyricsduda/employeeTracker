@@ -1,85 +1,70 @@
+// Require's for npm packages
 const mysql = require("mysql");
 const inquirer = require("inquirer");
 const logo = require("asciiart-logo");
 const { stat } = require("fs");
 
+// Mysql connection to local sever
 var connection = mysql.createConnection({
-    host: "localhost",
-    port: 3306,
-    user: "root",
-    password: "Mashedpotatos1!",
-    database: "employees_DB"
-  });
+  host: "localhost",
+  port: 3306,
+  user: "root",
+  password: "Mashedpotatos1!",
+  database: "employees_DB"
+});
+// Connection to main functions
+connection.connect(function (err) {
+  if (err) throw err;
+  start();
+});
+// Function to start the application, display a ascii logo, and to move to the main menu function
+function start() {
+  const logoText = logo({ name: "Employee Manager" }).render();
+  console.log(logoText);
+  loadPrompts();
+}
 
-  connection.connect(function(err) {
-    if (err) throw err;
-
-    start();
-  });
-
-  function start() {
-    const logoText = logo({name: "Employee Manager"}).render();
-    console.log(logoText);
-    loadPrompts();
-  }
-
-  function loadPrompts() {
-    inquirer
-      .prompt({
-        name: "mainMenu",
-        type: "list",
-        message: "What would you like to do?",
-        choices: ["View All Employees", "Add Employees", "Update Employee Role"]
-      })
-      .then(function(answer) {
-        // based on their answer, either call the bid or the post functions
-        if (answer.mainMenu === "View All Employees") {
-            viewAll();
-        }
-        else if(answer.mainMenu === "Add Employees") {
-            addEmployees();
-        }
-        else if(answer.mainMenu === "Update Employee Role") {
-            updateRole();
-        }else{
-          connection.end();
-        }
+// Function to load main inquier prompts
+function loadPrompts() {
+  inquirer
+    .prompt({
+      name: "mainMenu",
+      type: "list",
+      message: "What would you like to do?",
+      choices: ["View All Employees", "Add Employees", "Update Employee Role", "Exit"]
+    })
+    .then(function (answer) {
+      if (answer.mainMenu === "View All Employees") {
+        viewAll();
+      }
+      else if (answer.mainMenu === "Add Employees") {
+        addEmployees();
+      }
+      else if (answer.mainMenu === "Update Employee Role") {
+        updateRole();
+      } 
+      else if (answer.mainMenu === "Exit") {
+        connection.end();
+      }
+      else {
+        connection.end();
+      }
     });
-  }
-  function viewAll() {
-    var query =
-      `SELECT e.id, e.first_name, e.last_name, r.title, d.name AS department, r.salary, CONCAT(m.first_name, ' ', m.last_name) AS manager
-    FROM employee e
-    LEFT JOIN role r
-    ON e.role_id = r.id
-    LEFT JOIN department d
-    ON d.id = r.department_id
+}
+// Function to display all employee'
+function viewAll() {
+  var query =
+    `SELECT employee.id, employee.first_name, employee.last_name, role.title, department.name AS department, role.salary, CONCAT(m.first_name, ' ', m.last_name) AS manager
+    FROM employee
+    LEFT JOIN role 
+    ON employee.role_id = role .id
+    LEFT JOIN department
+    ON department.id = role .department_id
     LEFT JOIN employee m
-    ON m.id = e.manager_id`
-  
+    ON m.id = employee.manager_id`
     connection.query(query, function (err, res) {
       if (err) throw err;
-  
       console.table(res);
-
       loadPrompts();
     });
-
-  }
-
-
-// function viewAll() {
-//   connection.query ("SELECT * FROM employee,role,department", function(err, res) {
-//       if (err) throw err;
-//       for (var i = 0; i < res.length; i++) {
-//           console.log("Id: " + res[i].id + "|" + 
-//                       "First Name: " + res[i].first_name + "|" + 
-//                       "Last Name: " + res[i].last_name + "|" +
-//                       "Title: " + res[i].title + "|" +
-//                       "Department: " + res[i].name + "|" +
-//                       "Salary: " + res[i].salary + "|" +
-//                       "manager: " + res[i].title);
-//           console.log("--------------------------------------------------------------------------------");
-//       }
-//       loadPrompts();
-//   });
+}
