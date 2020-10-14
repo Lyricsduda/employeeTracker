@@ -31,14 +31,17 @@ function loadPrompts() {
       name: "mainMenu",
       type: "list",
       message: "What would you like to do?",
-      choices: ["View All Employees", "Add Employees", "Update Employee Role", "Exit"]
+      choices: ["View All Employees", "Add Employees", "Update Employee Role", "Remove employee", "Exit"]
     })
     .then(function (answer) {
       if (answer.mainMenu === "View All Employees") {
         viewAll();
       }
       else if (answer.mainMenu === "Add Employees") {
-        addEmployees();
+        roleInformation();
+      }
+      else if (answer.mainMenu === "Remove employee") {
+        employeeInforomation();
       }
       else if (answer.mainMenu === "Update Employee Role") {
         updateRole();
@@ -69,29 +72,24 @@ function viewAll() {
   });
 }
 
-
-// ------------------------------------------------------------------
-
-function addEmployees() {
-
+// Function to give addEmployee a option for role selection
+function roleInformation() {
   var query =
-    `SELECT role.id, role.title,role.salary 
+    `SELECT role.id, role.title, role.salary 
       FROM role`
 
   connection.query(query, function (err, res) {
     if (err) throw err;
 
-    const roleChoices = res.map(({ id, title, salary }) => ({
+    const roleInformationChoices = res.map(({ id, title, salary }) => ({
       value: id, title: `${title}`, salary: `${salary}`
     }));
-    roleInformation(roleChoices);
+    addEmployees(roleInformationChoices);
   });
 }
 
-
-
-function roleInformation(roleChoices) {
-
+// function to add a employee from the database based on the user's choice
+function addEmployees(roleInformationChoices) {
   inquirer
     .prompt([
       {
@@ -127,5 +125,45 @@ function roleInformation(roleChoices) {
 
           loadPrompts();
         });
+    });
+}
+
+// Function to generate the choices for the removeEmployee function
+function employeeInforomation() {
+  var query =
+    `SELECT employee.id, employee.first_name, employee.last_name
+      FROM employee`
+
+  connection.query(query, function (err, res) {
+    if (err) throw err;
+
+    const deleteEmployeeInformation = res.map(({ id, first_name, last_name }) => ({
+      value: id, name: `${id} ${first_name} ${last_name}`
+    }));
+
+    removeEmployees(deleteEmployeeInformation);
+  });
+}
+
+// function to remove a employee from the database based on the user's choice
+
+function removeEmployees(deleteEmployeeInformation) {
+
+  inquirer
+    .prompt([
+      {
+        type: "list",
+        name: "employeeId",
+        message: "Which employee do you want to remove?",
+        choices: deleteEmployeeInformation
+      }
+    ])
+    .then(function (answer) {
+      var query = `DELETE FROM employee WHERE ?`;
+      connection.query(query, { id: answer.employeeId }, function (err, res) {
+        if (err) throw err;
+        console.log("Employee deleted!\n");
+        loadPrompts();
+      });
     });
 }
