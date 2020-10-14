@@ -106,7 +106,7 @@ function addEmployees(roleInformationChoices) {
         type: "list",
         name: "roleId",
         message: "What is the employee's role?",
-        choices: roleChoices
+        choices: roleInformationChoices
       },
     ])
     .then(function (answer) {
@@ -165,5 +165,76 @@ function removeEmployees(deleteEmployeeInformation) {
         console.log("Employee deleted!\n");
         loadPrompts();
       });
+    });
+}
+
+// Function to give promptEmployeeUpdate choices for what role to update to when updating employee infromation
+function updateRole() {
+  var query =
+    `SELECT e.id, e.first_name, e.last_name, r.title, d.name AS department, r.salary, CONCAT(m.first_name, ' ', m.last_name) AS manager
+  FROM employee e
+  JOIN role r
+	ON e.role_id = r.id
+  JOIN department d
+  ON d.id = r.department_id
+  JOIN employee m
+	ON m.id = e.manager_id`
+
+  connection.query(query, function (err, res) {
+    if (err) throw err;
+
+    const employeeInformationChoices = res.map(({ id, first_name, last_name }) => ({
+      value: id, name: `${first_name} ${last_name}`      
+    }));
+    roleInformationArray(employeeInformationChoices);
+  });
+}
+
+// Function to give promptEmployeeUpdate choices for what employee to update to when updating employee infromation
+function roleInformationArray(employeeInformationChoices) {
+  var query =
+    `SELECT r.id, r.title, r.salary 
+  FROM role r`
+  let roleInformationChoices;
+
+  connection.query(query, function (err, res) {
+    if (err) throw err;
+
+    roleInformationChoices = res.map(({ id, title, salary }) => ({
+      value: id, title: `${title}`, salary: `${salary}`      
+    }));
+
+    promptEmployeeUpdate(employeeInformationChoices, roleInformationChoices);
+  });
+}
+
+// Function to select what employee and role you wish to update and update them
+function promptEmployeeUpdate(employeeInformationChoice, roleInformationChoices) {
+  inquirer
+    .prompt([
+      {
+        type: "list",
+        name: "employeeId",
+        message: "Which employee do you want to set with the role?",
+        choices: employeeInformationChoice
+      },
+      {
+        type: "list",
+        name: "roleId",
+        message: "Which role do you want to update?",
+        choices: roleInformationChoices
+      },
+    ])
+    .then(function (answer) {
+      var query = `UPDATE employee SET role_id = ? WHERE id = ?`
+      connection.query(query,
+        [ answer.roleId,  
+          answer.employeeId
+        ],
+        function (err, res) {
+          if (err) throw err;
+          console.log(res.affectedRows + "Updated successfully!");
+          loadPrompts();
+        });
     });
 }
