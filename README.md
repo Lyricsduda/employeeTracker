@@ -48,3 +48,6 @@ To run test's, run the following command:
 > npm test
 
 
+## Screenshot's
+
+![image](https://user-images.githubusercontent.com/70404735/96057020-03e13800-0e56-11eb-898b-bd964e0a62f5.png)
