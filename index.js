@@ -233,7 +233,7 @@ function promptEmployeeUpdate(employeeInformationChoice, roleInformationChoices)
         ],
         function (err, res) {
           if (err) throw err;
-          console.log(res.affectedRows + "Updated successfully!");
+          console.log("Employee Updated successfully!");
           loadPrompts();
         });
     });
